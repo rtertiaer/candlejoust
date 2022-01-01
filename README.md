@@ -21,7 +21,6 @@ The cost for a single controller is at most $20 USD, but if you're scrappy about
 ## todo
 - clean up code
 - provide circuit diagrams
-- make the "candle" LED responsive to movement and flicker, just like a real candle
 - send the MPU-6050 to sleep when the user has lost (are there other power improvements?)
 - implement a [piezo buzzer](https://www.adafruit.com/product/1740) and/or [vibrating motor](https://www.adafruit.com/product/1740) for further haptic/sound feedback on warning & losing conditions
 - create a 3d printed housing for the electronics & battery

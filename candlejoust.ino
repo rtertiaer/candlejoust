@@ -11,14 +11,16 @@ const int POWER_ADDR = 0x6B; // PWR_MGMT_1 register
 const int LED_DATA_PIN = 16; // Pin to communicate with LED; old values of 16, 5
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
 const int BUTTON_PIN = 6; // button pin used to restart game
-const double WARN_ACCEL = 2500;
+const double WARN_ACCEL = 2800;
 const double MAX_ACCEL = 3500;
 const int16_t BRIGHTNESS = 200;
 
 bool running;
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
-const uint32_t RED = strip.Color(0, 255, 0);
+Adafruit_NeoPixel strip(1, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
+
+// I'm colorblind lol. fetched from here: https://rgbcolorcode.com/color/flame
+const uint32_t FLAME = strip.gamma32(strip.Color(88, 226, 34));
 const uint32_t BLUE = strip.Color(0, 0, 255);
 const uint32_t BLANK = strip.Color(0, 0, 0);
 
@@ -221,7 +223,7 @@ void warning(){
     strip.setPixelColor(0, BLANK);
     strip.show();
     delay(50);
-    strip.setPixelColor(0, RED);
+    strip.setPixelColor(0, FLAME);
     strip.show();
     delay(50);
   }
@@ -230,7 +232,7 @@ void warning(){
 void start() {
   Serial.println("start() called");
   running = true;
-  strip.setPixelColor(0, RED);
+  strip.setPixelColor(0, FLAME);
   strip.show();
 }
 
@@ -266,6 +268,7 @@ void loop(){
   // the timing here is still a bit wacky (there are edge cases) but should be good enough
   if(running && accelerometer.dmpGetCurrentFIFOPacket(fifoBuffer)) { // gets current packet from DMP
     accel.get_values();
+
     if(accel.fail()){
       stop();
       return;
@@ -274,7 +277,13 @@ void loop(){
       warning();
       // discard latest data, as it seems cumulative over the course of the warning sequence
       accelerometer.dmpGetCurrentFIFOPacket(fifoBuffer);
+      return;
     }
+
+    // scale brightness down, like a real candle
+    strip.setPixelColor(0, FLAME); // https://github.com/adafruit/Adafruit_NeoPixel/blob/7f3ebe002a270ebf5298200c411085bba6ad131d/Adafruit_NeoPixel.cpp#L3359
+    strip.setBrightness(BRIGHTNESS - ( BRIGHTNESS * (accel.total_accel() / MAX_ACCEL )));
+    strip.show();
   }
   
 }
